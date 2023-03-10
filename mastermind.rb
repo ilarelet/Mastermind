@@ -74,7 +74,12 @@ class HumanPlayer
     end
 
     #creating a guess-combination from the input 
-    def guess
+    def create_code
+        puts "Create a four-digit code for the computer to crack!"
+        guess()
+    end
+
+    def guess; 
         begin
             input_comb = gets.chomp.split("")
             #checking the input for errors
@@ -105,6 +110,16 @@ class ComputerPlayer
     
     #creates random code to start the game
     def create_code
+        random_code = []
+        (0..3).each do |index|
+            #returns a random digit from 1 to 6
+            new_peg_id = rand(6)+1
+            random_code.push new_peg_id
+        end
+        Combination.new(random_code)
+    end
+
+    def guess
         random_code = []
         (0..3).each do |index|
             #returns a random digit from 1 to 6
@@ -150,8 +165,9 @@ class Game
         puts
     end
 
-    def playgame(guesser, creator, code)
+    def playgame(guesser, creator)
         puts "Our game begins! #{creator.name} created a code and #{guesser.name} need to crack it. Good luck!"
+        code = creator.create_code
         #Game lasts for 12 rounds
         (1..12).each do |round|
             puts "Round #{round}/12. Enter your guess:"
@@ -163,33 +179,31 @@ class Game
             print_result(result)
             if result["perfect"] == 4
                 puts "Congratulations!"
-                puts "YCode was guessed correctly in just #{round} attempts!"
+                puts "The code was guessed correctly in just #{round} attempts!"
                 return nil
             end
         end
-        puts "Sorry, you ran out of tries. Here is the correct code:"
+        puts "Sorry, #{guesser.name}, you ran out of tries.#{creator.name} Won! Here is the correct code:"
         code.display
     end
 end
 
+#Initializing a new game!
 mastermind = Game.new
 pc = ComputerPlayer.new
 player = HumanPlayer.new
-
 puts "Welcome to the Mastermind game!"
+
 while 1
     puts "Would you like to guess the code or to make one for computer to solve?"
     puts 'Type "g" to play as code guesser, "c" to play as code creater or any other key to exit'
     key = gets.chomp.upcase
     if key == "G"
         #PC creates a random code
-        code = pc.create_code
-        code.display
-        mastermind.playgame(player, pc, code)
+        mastermind.playgame(player, pc)
     elsif key == "C"
         #PC tries to guess the player's code
-        code = pc.create_code
-        mastermind.playgame(pc, player, code)
+        mastermind.playgame(pc, player)
     else
         break
     end
