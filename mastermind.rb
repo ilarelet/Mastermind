@@ -62,7 +62,6 @@ class Combination
         @combination.each do |peg|
             peg.display
         end
-        print "\n"
     end
 end
 
@@ -117,6 +116,7 @@ class ComputerPlayer
     end
 
     def print_result(result)
+        print " | ".red
         (1..result["perfect"]).each {print "●".red}
         (1..result["includes"]).each {print "○".red}
         puts
@@ -124,23 +124,24 @@ class ComputerPlayer
 
 
     def playgame(player, code)
+        puts "Our game begins! The computer created a code and you need to crack it Good luck!"
         #Game lasts for 12 rounds
         (1..12).each do |round|
-            puts "Round #{round}/12: Enter your guess"
+            puts "Round #{round}/12. Enter your guess:"
             #get input of player's guess
             guess = player.guess
             guess.display
             #Check the code and the guess for matches
             result = check(code, guess)
             print_result(result)
-            puts
             if result["perfect"] == 4
                 puts "Congratulations!"
                 puts "You've guessed the code correctly in just #{round} attempts!"
                 return nil
             end
         end
-        puts "Sorry, you ran out of tries. The correct code was #{code}"
+        puts "Sorry, you ran out of tries. Here is the correct code:"
+        code.display
     end
 end
 
@@ -152,7 +153,6 @@ pc = ComputerPlayer.new
 while 1
     #PC creates a random code
     code = pc.create_code
-    code.display
     pc.playgame(player, code)
     puts 'Would you like to play again? Type "y" to restart: ' 
     if gets.chomp.upcase != "Y"
