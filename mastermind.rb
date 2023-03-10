@@ -8,6 +8,8 @@ class String
     def bg_magenta;     "\e[45m#{self}\e[0m" end
     def bg_cyan;        "\e[46m#{self}\e[0m" end
     def bg_gray;        "\e[47m#{self}\e[0m" end
+#red font for results
+    def red;            "\e[31m#{self}\e[0m" end
 end
 
 #class representing a single peg with a number (id) and a color
@@ -114,6 +116,13 @@ class ComputerPlayer
         result
     end
 
+    def print_result(result)
+        (1..result["perfect"]).each {print "●".red}
+        (1..result["includes"]).each {print "○".red}
+        puts
+    end
+
+
     def playgame(player, code)
         #Game lasts for 12 rounds
         (1..12).each do |round|
@@ -123,7 +132,7 @@ class ComputerPlayer
             guess.display
             #Check the code and the guess for matches
             result = check(code, guess)
-            puts result
+            print_result(result)
             puts
             if result["perfect"] == 4
                 puts "Congratulations!"
