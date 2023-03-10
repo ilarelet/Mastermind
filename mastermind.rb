@@ -149,14 +149,25 @@ end
 player = HumanPlayer.new
 pc = ComputerPlayer.new
 
-
+puts "Welcome to the Mastermind game!"
 while 1
-    #PC creates a random code
-    code = pc.create_code
-    pc.playgame(player, code)
+    puts "Would you like to guess the code or to make one for computer to solve?"
+    puts 'Type "g" to play as code guesser, "c" to play as code creater or any other key to exit'
+    key = gets.chomp.upcase
+    if key == "G"
+        #PC creates a random code
+        code = pc.create_code
+        pc.playgame(player, code)
+    elsif key == "C"
+        #PC creates a random code
+        code = pc.create_code
+        pc.playgame(player, code)
+    else
+        break
+    end
     puts 'Would you like to play again? Type "y" to restart: ' 
     if gets.chomp.upcase != "Y"
-        puts "Come play more later! Bye!"
         break
     end
 end
+puts "Come play more later! Bye!"
