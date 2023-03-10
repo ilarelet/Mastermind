@@ -120,11 +120,24 @@ class Game
     def check(code, guess)
         #results represented as a hash {perfect:_, includes:_}
         result = Hash.new(0)
-        (0..3).each do |index|
-            if guess.combination[index].id == code.combination[index].id
+        #We create local copies of the code and a guess not to damage the originals
+        code_unchecked = code.id_list.dup
+        guess_unchecked = guess.id_list.dup
+        #first we only check the guess for the exact natches
+        guess_unchecked.each_with_index do |guess_peg, index|
+            if guess_peg == code_unchecked[index]
                 result["perfect"] += 1
-            elsif code.id_list.include?( guess.combination[index].id)
+                #If we find a "perfect" match we don't want to count it as "included" too
+                code_unchecked[index] = nil
+                guess_unchecked[index] = nil
+            end
+        end
+        #Then we look for included but not perfect matches
+        guess_unchecked.each do |guess_peg|
+            if guess_peg != nil and code_unchecked.include?(guess_peg)
                 result["includes"] += 1
+                #Only counting one "included peg for each digit in guess"
+                code_unchecked[code_unchecked.index(guess_peg)] = nil
             end
         end
         result
@@ -150,7 +163,7 @@ class Game
             print_result(result)
             if result["perfect"] == 4
                 puts "Congratulations!"
-                puts "You've guessed the code correctly in just #{round} attempts!"
+                puts "YCode was guessed correctly in just #{round} attempts!"
                 return nil
             end
         end
@@ -171,6 +184,7 @@ while 1
     if key == "G"
         #PC creates a random code
         code = pc.create_code
+        code.display
         mastermind.playgame(player, pc, code)
     elsif key == "C"
         #PC tries to guess the player's code
