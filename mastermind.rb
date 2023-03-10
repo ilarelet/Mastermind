@@ -66,6 +66,13 @@ class Combination
 end
 
 class HumanPlayer
+    attr_reader :name
+
+    def initialize
+        print "Enter your name: "
+        @name = gets.chomp
+    end
+
     #creating a guess-combination from the input 
     def guess
         begin
@@ -89,7 +96,13 @@ class HumanPlayer
     end
 end
 
-class ComputerPlayer    
+class ComputerPlayer 
+    attr_reader :name
+
+    def initialize
+        @name = "PC"
+    end
+    
     #creates random code to start the game
     def create_code
         random_code = []
@@ -100,7 +113,9 @@ class ComputerPlayer
         end
         Combination.new(random_code)
     end
+end
 
+class Game
     #compares the guess and the code
     def check(code, guess)
         #results represented as a hash {perfect:_, includes:_}
@@ -122,14 +137,13 @@ class ComputerPlayer
         puts
     end
 
-
-    def playgame(player, code)
-        puts "Our game begins! The computer created a code and you need to crack it Good luck!"
+    def playgame(guesser, creator, code)
+        puts "Our game begins! #{creator.name} created a code and #{guesser.name} need to crack it. Good luck!"
         #Game lasts for 12 rounds
         (1..12).each do |round|
             puts "Round #{round}/12. Enter your guess:"
             #get input of player's guess
-            guess = player.guess
+            guess = guesser.guess
             guess.display
             #Check the code and the guess for matches
             result = check(code, guess)
@@ -145,9 +159,9 @@ class ComputerPlayer
     end
 end
 
-#players creation
-player = HumanPlayer.new
+mastermind = Game.new
 pc = ComputerPlayer.new
+player = HumanPlayer.new
 
 puts "Welcome to the Mastermind game!"
 while 1
@@ -157,15 +171,15 @@ while 1
     if key == "G"
         #PC creates a random code
         code = pc.create_code
-        pc.playgame(player, code)
+        mastermind.playgame(player, pc, code)
     elsif key == "C"
-        #PC creates a random code
+        #PC tries to guess the player's code
         code = pc.create_code
-        pc.playgame(player, code)
+        mastermind.playgame(pc, player, code)
     else
         break
     end
-    puts 'Would you like to play again? Type "y" to restart: ' 
+    puts "\nWould you like to play again? Type \"y\" to restart: "
     if gets.chomp.upcase != "Y"
         break
     end
