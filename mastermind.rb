@@ -76,7 +76,7 @@ class HumanPlayer
     #creating a guess-combination from the input 
     def create_code
         puts "Create a four-digit code for the computer to crack!"
-        guess()
+        guess(nil, nil, nil)
     end
 
     def guess(previous_guess, previous_result, current_game); #for future revision!
@@ -127,10 +127,11 @@ class ComputerPlayer
             create_array()
             return Combination.new([1,1,2,2])
         end
+        puts "Let me think..."
         #delete the options, that would not give the same response 
         #if the current guess was the code, from the "untried" list
         @untried.map do |comb|
-            comb_check = current_game.check(comb, previous_guess)
+            comb_check = current_game.check(previous_guess, comb)
             if comb_check != previous_result
                 @untried.delete(comb)
             end
@@ -140,20 +141,20 @@ class ComputerPlayer
         #iterating over all the untried possible guesses
         @untried.each do |possible_guess|
             #for each guess create a hash 
-            possible_results = Hash.new(0)
+            possible_scores = Hash.new(0)
             #iterating over all the untried combinations AGAIN - for each guess the result...
             #of comparing it with each possible code is determines and added to the hash
             @untried.each do |possible_code|
                 possible_result = current_game.check(possible_code, possible_guess)
-                possible_results[possible_result] += 1
+                possible_scores[possible_result] += 1
             end
-            #after the hash is completed we determine the most popular result
-            most_common_result = possible_results.max_by {|k,v| v}
+            #after the hash is completed we determine the result with the highest score
+            highest_score_result = possible_scores.max_by {|k,v| v} [1]
             #compare the most common result's score to the lowest score we saw at all. 
             #if current score is lower than the lowest score - current guess becomes the best for the next turn
 
-            if most_common_result[1] < lowest_score
-                lowest_score = most_common_result[1]
+            if highest_score_result < lowest_score
+                lowest_score = highest_score_result
                 best_next_guess = possible_guess
             end
         end
@@ -259,5 +260,6 @@ while 1
     if gets.chomp.upcase != "Y"
         break
     end
+    pc = ComputerPlayer.new
 end
 puts "Come play more later! Bye!"
