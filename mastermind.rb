@@ -106,6 +106,7 @@ class ComputerPlayer
 
     def initialize
         @name = "PC"
+        @untried = []
     end
     
     #creates random code to start the game
@@ -119,14 +120,57 @@ class ComputerPlayer
         Combination.new(random_code)
     end
 
-    def guess
-        random_code = []
-        (0..3).each do |index|
-            #returns a random digit from 1 to 6
-            new_peg_id = rand(6)+1
-            random_code.push new_peg_id
+    def guess(previous_guess, previous_result, current_game)
+        #The PC uses Donald Knuth's method to solve the codebreaking game
+        if @untried == []
+            #for the very first guess - initializing the array of all possible options 
+            create_array()
+            return Combination.new(1,1,2,2)
         end
-        Combination.new(random_code)
+        #delete the options, that would not give the same response 
+        #if the current guess was the code, from the "untried" list
+        untried.map do |comb|
+            comb_check = current_game.check(comb, previous_guess)
+            if comb_check != previous_result
+                untried.pop(comb)
+            end
+        end
+        lowest_score = Float::INFINITY 
+        best_next_guess = nil
+        #iterating over all the untried possible guesses
+        untried.each do |possible_guess|
+            #for each guess create a hash 
+            possible_results = Hash.new(0)
+            #iterating over all the untried combinations AGAIN - for each guess the result...
+            #of comparing it with each possible code is determines and added to the hash
+            untried.each do |possible_code|
+                possible_result = current_game.check(possible_code, possible_guess)
+                possible_results[possible_result] += 1
+            end
+            #after the hash is completed we determine the most popular result
+            most_common_result = possible_results.max_by {|k,v| v}
+            #compare the most common result's score to the lowest score we saw at all. 
+            #if current score is lower than the lowest score - current guess becomes the best for the next turn
+            if most_common_result[1] < lowest_score
+                lowest_score = most_common_result
+                best_next_guess = possible_guess
+            end
+        end
+        #the guess with the lowest most commmon result's score
+        Combination.new(best_next_guess)
+    end
+
+    private
+    def create_array
+        (1..6).each do |a|
+            (1..6).each do |b|
+                (1..6).each do |c|
+                    (1..6).each do |d|
+                        @s.push [a,b,c,d]
+                    end
+                end
+            end
+        end
     end
 end
 
@@ -168,11 +212,12 @@ class Game
     def playgame(guesser, creator)
         puts "Our game begins! #{creator.name} created a code and #{guesser.name} need to crack it. Good luck!"
         code = creator.create_code
+        result = Hash.new(0)
         #Game lasts for 12 rounds
         (1..12).each do |round|
             puts "Round #{round}/12. Enter your guess:"
             #get input of player's guess
-            guess = guesser.guess
+            guess = guesser.guess(round, result)
             guess.display
             #Check the code and the guess for matches
             result = check(code, guess)
