@@ -125,25 +125,25 @@ class ComputerPlayer
         if @untried == []
             #for the very first guess - initializing the array of all possible options 
             create_array()
-            return Combination.new(1,1,2,2)
+            return Combination.new([1,1,2,2])
         end
         #delete the options, that would not give the same response 
         #if the current guess was the code, from the "untried" list
-        untried.map do |comb|
+        @untried.map do |comb|
             comb_check = current_game.check(comb, previous_guess)
             if comb_check != previous_result
-                untried.pop(comb)
+                @untried.delete(comb)
             end
         end
         lowest_score = Float::INFINITY 
         best_next_guess = nil
         #iterating over all the untried possible guesses
-        untried.each do |possible_guess|
+        @untried.each do |possible_guess|
             #for each guess create a hash 
             possible_results = Hash.new(0)
             #iterating over all the untried combinations AGAIN - for each guess the result...
             #of comparing it with each possible code is determines and added to the hash
-            untried.each do |possible_code|
+            @untried.each do |possible_code|
                 possible_result = current_game.check(possible_code, possible_guess)
                 possible_results[possible_result] += 1
             end
@@ -151,13 +151,14 @@ class ComputerPlayer
             most_common_result = possible_results.max_by {|k,v| v}
             #compare the most common result's score to the lowest score we saw at all. 
             #if current score is lower than the lowest score - current guess becomes the best for the next turn
+
             if most_common_result[1] < lowest_score
-                lowest_score = most_common_result
+                lowest_score = most_common_result[1]
                 best_next_guess = possible_guess
             end
         end
         #the guess with the lowest most commmon result's score
-        Combination.new(best_next_guess)
+        best_next_guess
     end
 
     private
@@ -166,7 +167,7 @@ class ComputerPlayer
             (1..6).each do |b|
                 (1..6).each do |c|
                     (1..6).each do |d|
-                        @s.push [a,b,c,d]
+                        @untried.push Combination.new([a,b,c,d])
                     end
                 end
             end
@@ -210,14 +211,15 @@ class Game
     end
 
     def playgame(guesser, creator)
-        puts "Our game begins! #{creator.name} created a code and #{guesser.name} need to crack it. Good luck!"
+        puts "Our game begins! #{creator.name} created a code and #{guesser.name} needs to crack it. Good luck!"
         code = creator.create_code
         result = Hash.new(0)
         #Game lasts for 12 rounds
+        previous_guess=nil
         (1..12).each do |round|
             puts "Round #{round}/12. Enter your guess:"
             #get input of player's guess
-            guess = guesser.guess(round, result)
+            guess = guesser.guess(previous_guess, result, self)
             guess.display
             #Check the code and the guess for matches
             result = check(code, guess)
@@ -227,6 +229,7 @@ class Game
                 puts "The code was guessed correctly in just #{round} attempts!"
                 return nil
             end
+            previous_guess = guess
         end
         puts "Sorry, #{guesser.name}, you ran out of tries.#{creator.name} Won! Here is the correct code:"
         code.display
