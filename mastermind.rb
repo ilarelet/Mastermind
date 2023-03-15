@@ -79,7 +79,7 @@ class HumanPlayer
         guess()
     end
 
-    def guess; 
+    def guess(previous_guess, previous_result, current_game); #for future revision!
         begin
             input_comb = gets.chomp.split("")
             #checking the input for errors
