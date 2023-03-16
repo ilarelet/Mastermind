@@ -1,3 +1,10 @@
+require_relative 'colors.rb'
+require_relative 'combination.rb'
+require_relative 'computer_player.rb'
+require_relative 'game.rb'
+require_relative 'human_player.rb'
+require_relative 'pegs.rb'
+
 #Initializing a new game!
 mastermind = Game.new
 pc = ComputerPlayer.new

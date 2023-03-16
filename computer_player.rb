@@ -18,7 +18,9 @@ class ComputerPlayer
         Combination.new(random_code)
     end
 
-    def guess(previous_guess, previous_result, current_game)
+    def guess(current_game)
+        previous_guess = current_game.previous_guess
+        previous_result = current_game.previous_result
         #The PC uses Donald Knuth's method to solve the codebreaking game
         if @unchecked == []
             #for the very first guess - initializing the array of all possible options 

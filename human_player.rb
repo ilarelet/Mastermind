@@ -9,10 +9,10 @@ class HumanPlayer
     #creating a guess-combination from the input 
     def create_code
         puts "Create a four-digit code for the computer to crack!"
-        guess(nil, nil, nil)
+        guess(nil)
     end
 
-    def guess(previous_guess, previous_result, current_game); #for future revision!
+    def guess(current_game); #for future revision!
         begin
             input_comb = gets.chomp.split("")
             #checking the input for errors

@@ -1,4 +1,31 @@
 class Game
+    attr_reader :previous_guess, :previous_result
+    def playgame(guesser, creator)
+        puts "Our game begins! #{creator.name} created a code and #{guesser.name} needs to crack it. Good luck!"
+        code = creator.create_code
+        result = Hash.new(0)
+        #Game lasts for 12 rounds
+        previous_guess=nil
+        (1..12).each do |round|###################
+            puts "Round #{round}/12. Enter your guess:"
+            #get input of player's guess
+            guess = guesser.guess(self)
+            guess.display
+            #Check the code and the guess for matches
+            result = check(code, guess)
+            print_result(result)
+            if result["perfect"] == 4
+                puts "Congratulations!"
+                puts "The code was guessed correctly in just #{round} attempts!"
+                return nil
+            end
+            @previous_guess = guess
+            @previous_result = result
+        end
+        puts "Sorry, #{guesser.name}, you ran out of tries.#{creator.name} Won! Here is the correct code:"
+        code.display
+    end
+
     #compares the guess and the code
     def check(code, guess)
         #results represented as a hash {perfect:_, includes:_}
@@ -38,30 +65,5 @@ class Game
         (1..result["perfect"]).each {print "●".red}
         (1..result["includes"]).each {print "○".red}
         puts
-    end
-
-    def playgame(guesser, creator)
-        puts "Our game begins! #{creator.name} created a code and #{guesser.name} needs to crack it. Good luck!"
-        code = creator.create_code
-        result = Hash.new(0)
-        #Game lasts for 12 rounds
-        previous_guess=nil
-        (1..12).each do |round|###################
-            puts "Round #{round}/12. Enter your guess:"
-            #get input of player's guess
-            guess = guesser.guess(previous_guess, result, self)
-            guess.display
-            #Check the code and the guess for matches
-            result = check(code, guess)
-            print_result(result)
-            if result["perfect"] == 4
-                puts "Congratulations!"
-                puts "The code was guessed correctly in just #{round} attempts!"
-                return nil
-            end
-            previous_guess = guess
-        end
-        puts "Sorry, #{guesser.name}, you ran out of tries.#{creator.name} Won! Here is the correct code:"
-        code.display
     end
 end
