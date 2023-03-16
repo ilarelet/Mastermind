@@ -132,26 +132,26 @@ class ComputerPlayer
         end
         puts "Let me think..."
         #delete the options, that would not give the same response 
-        #if the current guess was the code, from the "s" list
-        @s.map!.with_index do |comb, index|
-            check_result = current_game.check(previous_guess, comb)
-            @s[index] = nil if check_result != previous_result
+        #if the current guess was the code, from the "s" array
+        @s.each_with_index.map do |comb, index|
+            @s[index] = nil if current_game.check(previous_guess, comb) != previous_result 
         end
+        #Clean up the "s" array from the nils
         @s.compact!
-        puts "#{@s.length} elements left"
+        #starting a search for the guess with the lowest "score" - minmax function
         lowest_score = Float::INFINITY 
         best_next_guesses = []
         #iterating over all the untried possible guesses
         @unchecked.each do |possible_guess|
             #for each guess create a hash 
             possible_scores = Hash.new(0)
-            #iterating over set of combinations - for each guess the result...
-            #of comparing it with each possible code is determines and saved in the hash
+            #iterating over the "s" array to see how many codes would be deleted
+            #if we choose the current possible_guess for the next turn
             @s.each do |possible_code|
                 possible_result = current_game.check(possible_guess, possible_code)
                 possible_scores[possible_result] += 1
             end
-            #after the hash is completed we determine the result with the highest score
+            #after the hash of possible score is completed we determine the result with the highest score
             highest_score_result = possible_scores.max_by {|k,v| v} [1]
             #compare the most common result's score to the lowest score we saw at all. 
             #if current score is lower than the lowest score - current guess becomes the best for the next turn
@@ -163,15 +163,14 @@ class ComputerPlayer
                 best_next_guesses.push possible_guess
             end
         end
-
+        #Out of the possible next guesses with the lowest score we preferably choose one from 's'
         best_next_guesses.each do |guess| 
             if @s.include?(guess)
                 @unchecked.delete(guess) 
-                puts "guess from S"
                 return guess
             end
         end
-        #the guess with the lowest most commmon result's score
+        #if none of the "best guesses" are in 's' we pick the first one 
         @unchecked.delete(best_next_guesses[0])
         best_next_guesses[0]
     end
@@ -236,8 +235,6 @@ class Game
         puts "Our game begins! #{creator.name} created a code and #{guesser.name} needs to crack it. Good luck!"
         code = creator.create_code
         result = Hash.new(0)
-        print code.id_list
-        puts
         #Game lasts for 12 rounds
         previous_guess=nil
         (1..12).each do |round|###################
@@ -265,7 +262,6 @@ mastermind = Game.new
 pc = ComputerPlayer.new
 player = HumanPlayer.new
 
-puts mastermind.check(Combination.new([1,1,2,2]),Combination.new([3,4,5,2]))
 puts "Welcome to the Mastermind game!"
 
 while 1
