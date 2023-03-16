@@ -106,7 +106,8 @@ class ComputerPlayer
 
     def initialize
         @name = "PC"
-        @untried = []
+        @unchecked = []
+        @s = []
     end
     
     #creates random code to start the game
@@ -122,44 +123,57 @@ class ComputerPlayer
 
     def guess(previous_guess, previous_result, current_game)
         #The PC uses Donald Knuth's method to solve the codebreaking game
-        if @untried == []
+        if @unchecked == []
             #for the very first guess - initializing the array of all possible options 
             create_array()
+            @s = @unchecked.dup
+            #start with a basic combination 1-1-2-2
             return Combination.new([1,1,2,2])
         end
         puts "Let me think..."
         #delete the options, that would not give the same response 
-        #if the current guess was the code, from the "untried" list
-        @untried.map do |comb|
-            comb_check = current_game.check(previous_guess, comb)
-            if comb_check != previous_result
-                @untried.delete(comb)
-            end
+        #if the current guess was the code, from the "s" list
+        @s.map!.with_index do |comb, index|
+            check_result = current_game.check(previous_guess, comb)
+            @s[index] = nil if check_result != previous_result
         end
+        @s.compact!
+        puts "#{@s.length} elements left"
         lowest_score = Float::INFINITY 
-        best_next_guess = nil
+        best_next_guesses = []
         #iterating over all the untried possible guesses
-        @untried.each do |possible_guess|
+        @unchecked.each do |possible_guess|
             #for each guess create a hash 
             possible_scores = Hash.new(0)
-            #iterating over all the untried combinations AGAIN - for each guess the result...
-            #of comparing it with each possible code is determines and added to the hash
-            @untried.each do |possible_code|
-                possible_result = current_game.check(possible_code, possible_guess)
+            #iterating over set of combinations - for each guess the result...
+            #of comparing it with each possible code is determines and saved in the hash
+            @s.each do |possible_code|
+                possible_result = current_game.check(possible_guess, possible_code)
                 possible_scores[possible_result] += 1
             end
             #after the hash is completed we determine the result with the highest score
             highest_score_result = possible_scores.max_by {|k,v| v} [1]
             #compare the most common result's score to the lowest score we saw at all. 
             #if current score is lower than the lowest score - current guess becomes the best for the next turn
-
             if highest_score_result < lowest_score
                 lowest_score = highest_score_result
-                best_next_guess = possible_guess
+                best_next_guesses = []
+                best_next_guesses.push possible_guess
+            elsif highest_score_result = lowest_score
+                best_next_guesses.push possible_guess
+            end
+        end
+
+        best_next_guesses.each do |guess| 
+            if @s.include?(guess)
+                @unchecked.delete(guess) 
+                puts "guess from S"
+                return guess
             end
         end
         #the guess with the lowest most commmon result's score
-        best_next_guess
+        @unchecked.delete(best_next_guesses[0])
+        best_next_guesses[0]
     end
 
     private
@@ -168,7 +182,7 @@ class ComputerPlayer
             (1..6).each do |b|
                 (1..6).each do |c|
                     (1..6).each do |d|
-                        @untried.push Combination.new([a,b,c,d])
+                        @unchecked.push Combination.new([a,b,c,d])
                     end
                 end
             end
@@ -185,20 +199,27 @@ class Game
         code_unchecked = code.id_list.dup
         guess_unchecked = guess.id_list.dup
         #first we only check the guess for the exact natches
+        #result["perfect"] = guess_unchecked.count.with_index {|guess_peg, index| guess_peg == code_unchecked[index]}
+
+        ###
+        matches = []
         guess_unchecked.each_with_index do |guess_peg, index|
             if guess_peg == code_unchecked[index]
                 result["perfect"] += 1
-                #If we find a "perfect" match we don't want to count it as "included" too
-                code_unchecked[index] = nil
-                guess_unchecked[index] = nil
+                #If we find a "perfect" match we don't want to count it as "included" too, so we keep it's index in "matches" array
+                matches.push index
             end
         end
         #Then we look for included but not perfect matches
-        guess_unchecked.each do |guess_peg|
-            if guess_peg != nil and code_unchecked.include?(guess_peg)
-                result["includes"] += 1
-                #Only counting one "included peg for each digit in guess"
-                code_unchecked[code_unchecked.index(guess_peg)] = nil
+        guess_unchecked.each_with_index do |guess_peg, index|
+            if !matches.include?(index)
+                code_unchecked.each_with_index do |code_peg, index_code|
+                    if !matches.include?(index_code) and guess_peg == code_peg
+                        result["includes"] += 1
+                        code_unchecked[index_code] = nil
+                        break
+                    end
+                end
             end
         end
         result
@@ -215,9 +236,11 @@ class Game
         puts "Our game begins! #{creator.name} created a code and #{guesser.name} needs to crack it. Good luck!"
         code = creator.create_code
         result = Hash.new(0)
+        print code.id_list
+        puts
         #Game lasts for 12 rounds
         previous_guess=nil
-        (1..12).each do |round|
+        (1..12).each do |round|###################
             puts "Round #{round}/12. Enter your guess:"
             #get input of player's guess
             guess = guesser.guess(previous_guess, result, self)
@@ -241,6 +264,8 @@ end
 mastermind = Game.new
 pc = ComputerPlayer.new
 player = HumanPlayer.new
+
+puts mastermind.check(Combination.new([1,1,2,2]),Combination.new([3,4,5,2]))
 puts "Welcome to the Mastermind game!"
 
 while 1
